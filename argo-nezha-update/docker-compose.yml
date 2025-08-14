@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  cf_nezha:
+    build: .
+    container_name: cf_nezha
+    restart: unless-stopped
+    environment:
+      - CF_TUNNEL_TOKEN=eyJhIjoiOWNkOWMwOWIwZTBhYjg3Y2ExZmIzMjM2MjNhZTYzODciLCJ0IjoiOWVkYWJmNmYtYTYxMC00N2I2LWE0NTUtZmIwNmY1ZWIyNmNlIiwicyI6IlpEUTFPVEE1TWpJdE1tVm1ZaTAwTlRVMExXRTVNakF0Tmpjek1qQXhNbVE1TTJRdyJ9
+    volumes:
+      - ./nezha_data:/dashboard/data
+    ports:
+      - "8008:8008" # 哪吒面板默认端口（可改）
