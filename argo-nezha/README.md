@@ -8,6 +8,7 @@ Nezha Dashboard 是一个基于 [Nezha](https://github.com/nezhahq/nezha) 的项
 
 ## 最近更新
 2025-08-15
+- 修改dockerfile文件
 - 推送至docker仓库
 - 添加docker-compose.yml
 

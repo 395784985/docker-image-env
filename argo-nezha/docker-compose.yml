@@ -1,10 +1,10 @@
 services:
   nezha:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
-    # container_name: nezha-dashboard
-    image: 395784985/argo-nezha:v1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nezha-dashboard
+    # image: 395784985/argo-nezha:v1
     restart: always
     ports:
       - "8008:8008"
