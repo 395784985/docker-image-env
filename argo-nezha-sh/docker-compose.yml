@@ -1,12 +1,8 @@
-version: "3.8"
-
 services:
-  cf_nezha:
+  sh_nezha:
     build: 
       context: .
-      args:
-        - ARGO_DOMAIN=nezha.hb114.eu.org
-    container_name: cf_nezha
+    container_name: sh_nezha
     restart: unless-stopped
     environment:
       - ARGO_DOMAIN=nezha.hb114.eu.org
@@ -15,3 +11,8 @@ services:
       - ./data:/dashboard/data
     ports:
       - "8008:8008" # 哪吒面板默认端口（可改）
+    logging: # 设置日志驱动和大小限制
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"

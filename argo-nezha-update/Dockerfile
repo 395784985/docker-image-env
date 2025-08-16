@@ -1,19 +1,22 @@
-# 基础镜像用 debian slim，安装 cloudflared + 哪吒
-FROM debian:bullseye-slim
+# 使用 nginx alpine 作为基础镜像
+FROM nginx:stable-alpine
 
-# 设置时区和安装依赖
-RUN apt-get update && apt-get install -y \
-    wget curl unzip supervisor ca-certificates nginx tcpdump \
-    && rm -rf /var/lib/apt/lists/*
+# 设置时区环境变量
+ENV TZ=Asia/Shanghai
+
+# 安装必要的系统工具和依赖
+RUN apk add --no-cache \
+    wget curl unzip supervisor ca-certificates tcpdump \
+    aws-cli tar gzip tzdata openssl sqlite coreutils
 
 # 创建目录
 RUN mkdir -p /etc/supervisor/conf.d /dashboard/data /etc/nginx/ssl
 
-# 生成自签证书
-RUN openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-    -keyout /etc/nginx/ssl/nginx.key \
-    -out /etc/nginx/ssl/nginx.crt \
-    -subj "/C=CN/ST=Shanghai/L=Shanghai/O=nezha/CN=localhost"
+# 生成 nezha 证书
+ENV ARGO_DOMAIN=${ARGO_DOMAIN:-example.com}
+RUN openssl genrsa -out /dashboard/nezha.key 2048 && \
+    openssl req -new -subj "/CN=${ARGO_DOMAIN}" -key /dashboard/nezha.key -out /dashboard/nezha.csr && \
+    openssl x509 -req -days 36500 -in /dashboard/nezha.csr -signkey /dashboard/nezha.key -out /dashboard/nezha.pem
 
 # 安装 cloudflared
 RUN curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
@@ -21,15 +24,19 @@ RUN curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/c
     && chmod +x /usr/local/bin/cloudflared
 
 # 安装哪吒面板
-ENV NEZHA_VERSION=v1.12.4
+ENV NEZHA_VERSION=${NEZHA_VERSION:-v1.12.4}
 RUN wget https://github.com/nezhahq/nezha/releases/download/${NEZHA_VERSION}/dashboard-linux-amd64.zip \
     && unzip dashboard-linux-amd64.zip -d /dashboard \
     && rm dashboard-linux-amd64.zip \
     && mv /dashboard/dashboard-linux-amd64 /dashboard/nezha-dashboard \
     && chmod +x /dashboard/nezha-dashboard
 
+# 安装 哪吒应用文件 
+# COPY --from=ghcr.io/nezhahq/nezha:v1.12.4 /dashboard/app /dashboard/nezha-dashboard
+# COPY --from=ghcr.io/nezhahq/nezha:v1.12.4 /etc/ssl/certs /etc/ssl/certs
+
 # Nginx 配置
-COPY nginx.conf /etc/nginx/sites-available/default
+COPY nginx.conf /etc/nginx/conf.d/main.conf
 
 # Supervisor 配置
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
